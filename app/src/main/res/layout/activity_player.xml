@@ -21,7 +21,7 @@
         android:id="@+id/overlay"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="top|start"
+        android:layout_gravity="bottom|start"
         android:layout_margin="32dp"
         android:background="@drawable/overlay_bg"
         android:gravity="center_vertical"
@@ -54,6 +54,26 @@
                 android:layout_height="wrap_content"
                 android:textColor="@color/text_dim"
                 android:textSize="15sp" />
+
+            <TextView
+                android:id="@+id/ovEpg"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:maxWidth="900dp"
+                android:textColor="@color/text"
+                android:textSize="16sp"
+                android:visibility="gone" />
+
+            <ProgressBar
+                android:id="@+id/ovProgress"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="360dp"
+                android:layout_height="6dp"
+                android:layout_marginTop="6dp"
+                android:max="100"
+                android:progressTint="@color/accent"
+                android:visibility="gone" />
         </LinearLayout>
     </LinearLayout>
 

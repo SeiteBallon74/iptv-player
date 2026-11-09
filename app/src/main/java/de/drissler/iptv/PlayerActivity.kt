@@ -40,6 +40,8 @@ class PlayerActivity : AppCompatActivity() {
     private lateinit var ovName: TextView
     private lateinit var ovInfo: TextView
     private lateinit var error: TextView
+    private lateinit var ovEpg: TextView
+    private lateinit var ovProgress: ProgressBar
 
     private val handler = Handler(Looper.getMainLooper())
     private val hideOverlay = Runnable { overlay.visibility = View.GONE }
@@ -60,6 +62,8 @@ class PlayerActivity : AppCompatActivity() {
         ovName = findViewById(R.id.ovName)
         ovInfo = findViewById(R.id.ovInfo)
         error = findViewById(R.id.error)
+        ovEpg = findViewById(R.id.ovEpg)
+        ovProgress = findViewById(R.id.ovProgress)
 
         playerView.useController = false
         playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
@@ -197,7 +201,25 @@ class PlayerActivity : AppCompatActivity() {
         if (ch.logo != null) ovLogo.load(ch.logo) { crossfade(false) } else ovLogo.setImageDrawable(null)
         overlay.visibility = View.VISIBLE
         handler.removeCallbacks(hideOverlay)
-        handler.postDelayed(hideOverlay, 4_000)
+        handler.postDelayed(hideOverlay, 5_000)
+        loadEpg(ch)
+    }
+
+    private fun loadEpg(ch: Channel) {
+        ovEpg.visibility = View.GONE
+        ovProgress.visibility = View.GONE
+        Thread {
+            val items = Epg.load(this, ch.url)
+            runOnUiThread {
+                if (isFinishing || ChannelStore.playing.getOrNull(ChannelStore.index)?.url != ch.url) return@runOnUiThread
+                if (items.isNotEmpty()) {
+                    ovEpg.text = Epg.format(items, "\n")
+                    ovEpg.visibility = View.VISIBLE
+                    ovProgress.progress = Epg.progress(items)
+                    ovProgress.visibility = View.VISIBLE
+                }
+            }
+        }.start()
     }
 
     private fun updateOverlayText() {

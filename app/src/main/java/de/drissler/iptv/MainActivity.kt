@@ -2,6 +2,8 @@ package de.drissler.iptv
 
 import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
@@ -25,6 +27,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var groupsView: RecyclerView
     private lateinit var channelsView: RecyclerView
     private lateinit var status: TextView
+    private lateinit var epgLine: TextView
+    private val handler = Handler(Looper.getMainLooper())
+    private var epgFor: String? = null
 
     private val groupAdapter = GroupAdapter()
     private val channelAdapter = ChannelAdapter()
@@ -39,6 +44,7 @@ class MainActivity : AppCompatActivity() {
         groupsView = findViewById(R.id.groups)
         channelsView = findViewById(R.id.channels)
         status = findViewById(R.id.status)
+        epgLine = findViewById(R.id.epg)
 
         groupsView.layoutManager = LinearLayoutManager(this)
         groupsView.adapter = groupAdapter
@@ -155,6 +161,25 @@ class MainActivity : AppCompatActivity() {
         status.text = if (nowFav) "★ ${ch.name} zu Favoriten hinzugefügt" else "${ch.name} aus Favoriten entfernt"
     }
 
+    /** Jetzt/Danach für den markierten Sender, leicht verzögert, damit schnelles Scrollen nicht bremst. */
+    private fun showEpg(position: Int) {
+        val ch = channelAdapter.items.getOrNull(position) ?: return
+        epgFor = ch.url
+        epgLine.text = ch.name
+        handler.removeCallbacksAndMessages(null)
+        handler.postDelayed({
+            Thread {
+                val items = Epg.load(this, ch.url)
+                runOnUiThread {
+                    if (epgFor == ch.url) {
+                        val text = Epg.format(items, "\n")
+                        epgLine.text = if (text.isEmpty()) "${ch.name}  ·  kein EPG" else "${ch.name}\n${text.replace("\n", "   ·   ")}"
+                    }
+                }
+            }.start()
+        }, 400)
+    }
+
     private fun play(position: Int) {
         if (channelAdapter.items.isEmpty()) return
         ChannelStore.playing = channelAdapter.items
@@ -219,6 +244,9 @@ class MainActivity : AppCompatActivity() {
             v.setOnClickListener {
                 val p = vh.bindingAdapterPosition
                 if (p != RecyclerView.NO_POSITION) play(p)
+            }
+            v.setOnFocusChangeListener { _, hasFocus ->
+                if (hasFocus) showEpg(vh.bindingAdapterPosition)
             }
             v.setOnLongClickListener {
                 val p = vh.bindingAdapterPosition
