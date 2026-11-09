@@ -83,7 +83,6 @@ class MainActivity : AppCompatActivity() {
 
     private fun load(url: String) {
         status.text = "Lade Senderliste …"
-        val ua = Prefs.userAgent(this)
         Thread {
             val cached = try { PlaylistRepo.loadCached(this, url) } catch (e: Exception) { emptyList() }
             if (cached.isNotEmpty()) runOnUiThread {
@@ -91,7 +90,7 @@ class MainActivity : AppCompatActivity() {
                 status.text = "${cached.size} Sender · aktualisiere …"
             }
             try {
-                val fresh = PlaylistRepo.download(this, url, ua)
+                val fresh = PlaylistRepo.download(this, url)
                 runOnUiThread {
                     setChannels(fresh)
                     status.text = "${fresh.size} Sender"
